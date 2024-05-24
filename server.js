@@ -15,7 +15,7 @@ const logger = new Console({ stdout: logFileStream, stderr: logFileStream });
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'public/uploads');
+    cb(null, 'public/uploads'); // Adjust the upload destination path if needed
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
@@ -90,7 +90,7 @@ const checkKeywordInPDF = async (filePath, keyword) => {
     }
 };
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000; // Use environment variable for port
 app.listen(PORT, () => {
   logger.log(`Server is running on port ${PORT}`);
 });
