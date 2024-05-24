@@ -24,11 +24,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).array('files');
 
-
-app.get("/", (res,req) => {
-    console.write("its working")
-    console.log("its working")
-})
+app.get("/", (req, res) => {
+    console.log("It's working");
+    res.send("It's working");
+});
 
 app.post('/upload', (req, res) => {
   try {
@@ -89,8 +88,7 @@ const checkKeywordInPDF = async (filePath, keyword) => {
       logger.error('Error checking keyword in PDF:', error);
       throw new Error('Error checking keyword in PDF.');
     }
-  };
-  
+};
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
