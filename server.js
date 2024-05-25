@@ -3,11 +3,22 @@ const cors = require('cors');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const { Console } = require('console');
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // To parse JSON bodies
 
 const logger = new Console(process.stdout, process.stderr);
+
+// Middleware to authenticate API key
+const checkApiKey = (req, res, next) => {
+  const checkApiKey = req.header('x-api-key'); // Use a common header name like 'x-api-key'
+  if (checkApiKey !== process.env.API_KEY) {
+    return res.status(401).json({ success: false, message: 'Incorrect API key.' });
+  }
+  next();
+};
 
 // Configure Multer to store files in memory
 const storage = multer.memoryStorage();
@@ -15,12 +26,12 @@ const upload = multer({ storage }).array('files');
 
 // Root endpoint to test server functionality
 app.get("/", (req, res) => {
-    logger.log("It's working");
-    res.send("It's working");
+  logger.log("It's working");
+  res.send("It's working");
 });
 
-// Upload endpoint to process PDF files and scan for keywords
-app.post('/upload', upload, async (req, res) => {
+// Protected upload endpoint to process PDF files and scan for keywords
+app.post('/upload', checkApiKey, upload, async (req, res) => {
   try {
     const keywords = req.body.keywords.split(',').map(keyword => keyword.trim().toLowerCase());
     const files = req.files;
