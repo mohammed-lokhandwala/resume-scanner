@@ -7,33 +7,34 @@ const { Console } = require('console');
 const app = express();
 app.use(cors());
 
-const logger = new Console();
+const logger = new Console(process.stdout, process.stderr);
 
-// Removed multer storage configuration and file-related code
+// Configure Multer to store files in memory
+const storage = multer.memoryStorage();
+const upload = multer({ storage }).array('files');
 
+// Root endpoint to test server functionality
 app.get("/", (req, res) => {
-    console.log("It's working");
+    logger.log("It's working");
     res.send("It's working");
 });
 
-const upload = multer().array('files');
-
+// Upload endpoint to process PDF files and scan for keywords
 app.post('/upload', upload, async (req, res) => {
   try {
-    const keywords = req.body.keywords.split(',').map(keyword => keyword.trim());
+    const keywords = req.body.keywords.split(',').map(keyword => keyword.trim().toLowerCase());
     const files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No files were uploaded.' });
+    }
 
     const results = await Promise.all(files.map(async (file) => {
       if (file.mimetype === 'application/pdf') {
-        const buffer = file.buffer; // Get the buffer containing the file data
-        const keywordResults = await Promise.all(keywords.map(async (keyword) => {
-          if (await checkKeywordInPDF(buffer, keyword)) {
-            logger.log(`File: ${file.originalname}, Keyword: ${keyword}`);
-            return true;
-          }
-          return false;
-        }));
-        if (keywordResults.some(result => result === true)) {
+        const buffer = file.buffer;
+        const keywordFound = await checkKeywordsInPDF(buffer, keywords);
+        if (keywordFound) {
+          logger.log(`File: ${file.originalname}, Keywords: Found`);
           return {
             filename: file.originalname,
             keywordFound: true
@@ -52,22 +53,19 @@ app.post('/upload', upload, async (req, res) => {
   }
 });
 
-const checkKeywordInPDF = async (fileBuffer, keyword) => {
-    try {
-      const { text } = await pdfParse(fileBuffer);
-      
-      // Convert text content and keyword to lowercase for case-insensitive comparison
-      const lowerCaseText = text.toLowerCase();
-      const lowerCaseKeyword = keyword.toLowerCase();
-      
-      // Use indexOf with case-insensitive comparison
-      return lowerCaseText.includes(lowerCaseKeyword);
-    } catch (error) {
-      logger.error('Error checking keyword in PDF:', error);
-      throw new Error('Error checking keyword in PDF.');
-    }
+// Helper function to check if any keywords are present in the PDF
+const checkKeywordsInPDF = async (buffer, keywords) => {
+  try {
+    const { text } = await pdfParse(buffer);
+    const lowerCaseText = text.toLowerCase();
+    return keywords.some(keyword => lowerCaseText.includes(keyword));
+  } catch (error) {
+    logger.error('Error checking keywords in PDF:', error);
+    throw new Error('Error checking keywords in PDF.');
+  }
 };
 
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   logger.log(`Server is running on port ${PORT}`);
