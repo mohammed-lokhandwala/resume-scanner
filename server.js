@@ -3,34 +3,37 @@ const cors = require('cors');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const { Console } = require('console');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config(); 
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // To parse JSON bodies
+app.use(express.json()); 
 
 const logger = new Console(process.stdout, process.stderr);
 
-// Middleware to authenticate API key
+
 const checkApiKey = (req, res, next) => {
-  const checkApiKey = req.header('x-api-key'); // Use a common header name like 'x-api-key'
+  const checkApiKey = req.header('x-api-key');
   if (checkApiKey !== process.env.API_KEY) {
     return res.status(401).json({ success: false, message: 'Incorrect API key.' });
   }
   next();
 };
 
-// Configure Multer to store files in memory
+//express js multer for users to upload files
 const storage = multer.memoryStorage();
 const upload = multer({ storage }).array('files');
 
-// Root endpoint to test server functionality
+
 app.get("/", (req, res) => {
   logger.log("It's working");
   res.send("It's working");
 });
 
-// Protected upload endpoint to process PDF files and scan for keywords
+//takes the file uploaded by the user using multer (stored in multer memory) also takes the keyword, if files length is less than 0 means no file upload so it rejects the request
+//than it checks the file type, if it's  a pdf file than it accept  , buffer retrive files from the multer storage, than ketwordfound filter , if the keyword if found
+// it retunns the filename and keyword
+//)
 app.post('/upload', checkApiKey, upload, async (req, res) => {
   try {
     const keywords = req.body.keywords.split(',').map(keyword => keyword.trim().toLowerCase());
@@ -64,7 +67,9 @@ app.post('/upload', checkApiKey, upload, async (req, res) => {
   }
 });
 
-// Helper function to check if any keywords are present in the PDF
+
+
+// take text from the files using pdfparse(buffer) convert that text to lower case , using .some(loop over each keyowrd and check if its in the text from pdf and teturn it)
 const checkKeywordsInPDF = async (buffer, keywords) => {
   try {
     const { text } = await pdfParse(buffer);
@@ -76,7 +81,34 @@ const checkKeywordsInPDF = async (buffer, keywords) => {
   }
 };
 
-// Start the server
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   logger.log(`Server is running on port ${PORT}`);
