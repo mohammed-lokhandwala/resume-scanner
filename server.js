@@ -41,12 +41,16 @@ app.post('/upload', checkApiKey, upload, async (req, res) => {
       if (file.mimetype === 'application/pdf') {
         const buffer = file.buffer;
         const keywordFound = await checkKeywordsInPDF(buffer, keywords);
+      
         if (keywordFound) {
           logger.log(`File: ${file.originalname}, Keywords: Found`);
           return {
             filename: file.originalname,
             keywordFound: true
           };
+        }
+        else {
+          res.status(200).json({ success: true, message: 'no keyword found.' });
         }
       }
       return null;
