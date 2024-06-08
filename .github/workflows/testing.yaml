@@ -1,13 +1,15 @@
-name: learn-github-actions
-run-name: ${{ github.actor }} is learning GitHub Actions
+name: build my node application
 on: [push]
+
 jobs:
-  check-bats-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm install -g bats
-      - run: bats -v
+    build_node_application:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@4
+            - uses: actions/setup-node@4
+              with:
+                node-version: '20'
+            - name: npm install the dependency
+            - run: npm install 
+            - name: start the server 
+            - name: node server.js
