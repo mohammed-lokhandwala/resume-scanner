@@ -9,7 +9,5 @@ jobs:
             - uses: actions/setup-node@4
               with:
                 node-version: '20'
-            - name: npm install the dependency
             - run: npm install 
-            - name: start the server 
             - run: node server.js
