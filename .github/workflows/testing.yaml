@@ -12,4 +12,4 @@ jobs:
             - name: npm install the dependency
             - run: npm install 
             - name: start the server 
-            - name: node server.js
+            - run: node server.js
